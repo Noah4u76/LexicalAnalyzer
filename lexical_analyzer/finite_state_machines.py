@@ -30,3 +30,37 @@ class FiniteStateMachines:
             return Token(TOKEN_KEYWORD, result)
         
         return Token(TOKEN_IDENTIFIER, result)
+    
+    def integer(self):
+        """
+        Regular Expression: [0-9]+
+        """
+        if not (self.lexer.current_char is not None and self.lexer.current_char.isdigit()):
+            return None
+        
+        result = ''
+        
+        # Checking to make sure the first character is a digit our 1st state
+        while self.lexer.current_char is not None and self.lexer.current_char.isdigit():
+            result += self.lexer.current_char
+            self.lexer.advance()
+        
+        # Checking for a real number with decimal point, saves current position for backtracking if needed
+        if self.lexer.current_char == '.':
+            temp_pos = self.lexer.pos
+            temp_char = self.lexer.current_char
+            temp_line = self.lexer.line
+            temp_column = self.lexer.column
+            
+            result += self.lexer.current_char
+            self.lexer.advance()
+
+            #Checking if digits go beyond the decimal point, if real number revert back to previous position and let real number handle it
+            if self.lexer.current_char is not None and self.lexer.current_char.isdigit():
+                self.lexer.position = temp_pos
+                self.lexer.current_char = temp_char
+                self.lexer.line = temp_line
+                self.lexer.column = temp_column
+                return None
+        
+        return Token(TOKEN_INTEGER, result)
