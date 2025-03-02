@@ -16,6 +16,11 @@ KEYWORDS = [
     "integer",
     "real",
     "boolean",
+    "true",
+    "false",
+    "print",
+    "read",
+    "main"
 ]
 
 OPERATORS = [
