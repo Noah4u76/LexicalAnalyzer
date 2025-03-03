@@ -23,36 +23,62 @@ class Lexer:
     def skip_whitespace(self):
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
-    
+            
+    def skip_comment(self):
+        if self.text[self.pos:self.pos+2] == "[*":
+            while self.current_char is not None:
+                self.advance()
+                if self.text[self.pos-1:self.pos+1] == "*]":
+                    self.advance()  # Move past the closing "]*"
+                    return
 
     def get_next_token(self):
         self.skip_whitespace()
+        
+        if self.text[self.pos:self.pos+2] == "[*":
+            self.skip_comment()
+            return self.get_next_token()
+    
         if self.current_char is None:
             return None
-        
-        #Checking order of the FSM's
-        fsm = FiniteStateMachines(self)
-        for method in [fsm.identifier, fsm.integer, fsm.real, fsm.operator, fsm.seperator]:
-             token = method()
-             if token:
-                 return token
-        print(f"Debug: Unrecognized character '{self.current_char}' at line {self.line}, column {self.column}")
-        
-        if self.current_char in SEPARATORS:
-            print(f"Debug: Recognized separator '{self.current_char}'")
-            token = Token(TOKEN_SEPARATOR, self.current_char)
-            self.advance()
-            return token
-        
-        if self.current_char == '.' and self.pos > 0 and self.text[self.pos - 1].isdigit():
-            result = '.'
-            self.advance()
+
+    # Handle numbers properly (including real numbers with decimals)
+        if self.current_char.isdigit():
+            result = ''
             while self.current_char is not None and self.current_char.isdigit():
                 result += self.current_char
                 self.advance()
-            print(f"Debug: Recognized real number '{result}'")
-            return Token(TOKEN_REAL, result)
         
+        # If a decimal point follows, check for a valid real number
+            if self.current_char == '.':
+                result += '.'
+                self.advance()
+            
+            # Ensure at least one digit follows the decimal
+                if self.current_char is not None and self.current_char.isdigit():
+                    while self.current_char is not None and self.current_char.isdigit():
+                        result += self.current_char
+                        self.advance()
+                    print(f"Debug: Recognized real number '{result}'")
+                    return Token(TOKEN_REAL, result)
+                else:
+                    raise SyntaxError(f"Invalid real number format at line {self.line}, column {self.column}")
+        
+            print(f"Debug: Recognized integer '{result}'")
+            return Token(TOKEN_INTEGER, result)
+
+        fsm = FiniteStateMachines(self)
+        for method in [fsm.identifier, fsm.integer, fsm.real, fsm.operator, fsm.separator]:
+            token = method()
+            if token:
+                return token
+
+        print(f"Debug: Unrecognized character '{self.current_char}' at line {self.line}, column {self.column}")
+
+    # Handle standalone '.'
+        if self.current_char == '.':
+            raise SyntaxError(f"Invalid use of '.' at line {self.line}, column {self.column}")
+
         raise SyntaxError(f"Invalid Character '{self.current_char}' at line {self.line}, column {self.column}")
 
     

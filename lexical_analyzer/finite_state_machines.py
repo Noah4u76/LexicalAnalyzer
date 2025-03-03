@@ -85,7 +85,7 @@ class FiniteStateMachines:
             self.lexer.advance()
         
             # Checking to make sure there is digits after decimal point our 3rd state
-            if not (self.lexer.current_char is not None and self.lexer.current_char.isdigit()):
+            if self.lexer.current_char is not None and self.lexer.current_char.isdigit():
                 raise SyntaxError(f"Invalid real number format at line {self.lexer.line}, column {self.lexer.column}")
         
             while self.lexer.current_char is not None and self.lexer.current_char.isdigit():
@@ -117,13 +117,12 @@ class FiniteStateMachines:
             
         return Token(TOKEN_OPERATOR, result)
     
-    def seperator(self):
+    def separator(self):
         """
         Simple Finite State Machine for Separators
         """
-        if not self.lexer.current_char is not None and self.lexer.current_char in SEPARATORS:
+        if self.lexer.current_char in SEPARATORS:
             result = self.lexer.current_char
             self.lexer.advance()
             return Token(TOKEN_SEPARATOR, result)
-    
         return None
