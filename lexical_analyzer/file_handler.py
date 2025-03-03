@@ -12,7 +12,7 @@ class FileHandler:
     def write_output_file(self, tokens):
         with open(self.output_file, 'w') as file:
             for token in tokens:
-                file.wrtite(f"{token}\n")
+                file.write(f"{token}\n")
 
     def process(self):
         input_code = self.read_file()
@@ -20,3 +20,7 @@ class FileHandler:
         tokens = lexer.tokenize()
         self.write_output_file(tokens)
         
+        
+def analyze_file(input_file, output_file):
+    file_handler = FileHandler(input_file, output_file)
+    file_handler.process()        
