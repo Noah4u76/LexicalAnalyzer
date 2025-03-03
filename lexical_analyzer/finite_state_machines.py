@@ -80,21 +80,21 @@ class FiniteStateMachines:
             self.lexer.advance()
         
         # Checking for a decimal point our 2nd state
-        if self.lexer.current_char != '.':
-            return None
-        
-        result += self.lexer.current_char
-        self.lexer.advance()
-        
-        # Checking to make sure there is digits after decimal point our 3rd state
-        if not (self.lexer.current_char is not None and self.lexer.current_char.isdigit()):
-            raise SyntaxError(f"Invalid real number format at line {self.lexer.line}, column {self.lexer.column}")
-        
-        while self.lexer.current_char is not None and self.lexer.current_char.isdigit():
+        if self.lexer.current_char == '.':
             result += self.lexer.current_char
             self.lexer.advance()
         
-        return Token(TOKEN_REAL, result)
+            # Checking to make sure there is digits after decimal point our 3rd state
+            if not (self.lexer.current_char is not None and self.lexer.current_char.isdigit()):
+                raise SyntaxError(f"Invalid real number format at line {self.lexer.line}, column {self.lexer.column}")
+        
+            while self.lexer.current_char is not None and self.lexer.current_char.isdigit():
+                result += self.lexer.current_char
+                self.lexer.advance()
+        
+            return Token(TOKEN_REAL, result)
+    
+        return None
     
     def operator(self):
         """
@@ -121,10 +121,9 @@ class FiniteStateMachines:
         """
         Simple Finite State Machine for Separators
         """
-        if not (self.lexer.current_char is not None and self.lexer.current_char in "(){}[],;:"):
-            return None
-        
-        result = self.lexer.current_char
-        self.lexer.advance()
-            
-        return Token(TOKEN_SEPARATOR, result)
+        if not self.lexer.current_char is not None and self.lexer.current_char in SEPARATORS:
+            result = self.lexer.current_char
+            self.lexer.advance()
+            return Token(TOKEN_SEPARATOR, result)
+    
+        return None

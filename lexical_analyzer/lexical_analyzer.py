@@ -20,7 +20,7 @@ class Lexer:
             self.column += 1
             self.current_char = self.text[self.pos] if self.pos < len(self.text) else None
 
-    def ship_whitespace(self):
+    def skip_whitespace(self):
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
     
@@ -32,11 +32,29 @@ class Lexer:
         
         #Checking order of the FSM's
         fsm = FiniteStateMachines(self)
-        for method in [fsm.identifier, fsm.integer, fsm.real, fsm.operator]:
+        for method in [fsm.identifier, fsm.integer, fsm.real, fsm.operator, fsm.seperator]:
              token = method()
              if token:
                  return token
-        raise SyntaxError(f"Invalid Character '{self.current_char} at line {self.line}, column {self.column}")
+        print(f"Debug: Unrecognized character '{self.current_char}' at line {self.line}, column {self.column}")
+        
+        if self.current_char in SEPARATORS:
+            print(f"Debug: Recognized separator '{self.current_char}'")
+            token = Token(TOKEN_SEPARATOR, self.current_char)
+            self.advance()
+            return token
+        
+        if self.current_char == '.' and self.pos > 0 and self.text[self.pos - 1].isdigit():
+            result = '.'
+            self.advance()
+            while self.current_char is not None and self.current_char.isdigit():
+                result += self.current_char
+                self.advance()
+            print(f"Debug: Recognized real number '{result}'")
+            return Token(TOKEN_REAL, result)
+        
+        raise SyntaxError(f"Invalid Character '{self.current_char}' at line {self.line}, column {self.column}")
+
     
     def tokenize(self):
         tokens = []
