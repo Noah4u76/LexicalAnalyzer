@@ -95,6 +95,184 @@ class Parser:
             if self.output:
                 self.output.write(f"Parsing failed: {e}\n")
         
-            
+    def rat25s(self):
+        """
+        R1. <Rat25S> ::= $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
+        """
+        self.print_production("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
+        
+        # Match the first $$
+        if self.current_token and self.current_token.lexeme == "$$":
+            self.match(lexeme="$$")
+        else:
+            self.error("Expected '$$' at the beginning of the program")
+        
+        # Parse optional function definitions
+        self.opt_function_definitions()
+        
+        # Match the second $$
+        if self.current_token and self.current_token.lexeme == "$$":
+            self.match(lexeme="$$")
+        else:
+            self.error("Expected '$$' after function definitions")
+        
+        # Parse optional declarations
+        self.opt_declaration_list()
+        
+        # Match the third $$
+        if self.current_token and self.current_token.lexeme == "$$":
+            self.match(lexeme="$$")
+        else:
+            self.error("Expected '$$' after declarations")
+        
+        # Parse statement list
+        self.statement_list()
+        
+        # Match the fourth $$
+        if self.current_token and self.current_token.lexeme == "$$":
+            self.match(lexeme="$$")
+        else:
+            self.error("Expected '$$' at the end of the program")
+    
+    def opt_function_definitions(self):
+        """
+        R2. <Opt Function Definitions> ::= <Function Definitions> | <Empty>
+        """
+        self.print_production("<Opt Function Definitions> -> <Function Definitions> | <Empty>")
+        
+        # Check if we have a function definition
+        if self.current_token and self.current_token.lexeme == "function":
+            self.function_definitions()
+        # else: Empty production, do nothing
+    
+    def function_definitions(self):
+        """
+        R3. <Function Definitions> ::= <Function> | <Function> <Function Definitions>
+        """
+        self.print_production("<Function Definitions> -> <Function> | <Function> <Function Definitions>")
+        
+        # Parse a function
+        self.function()
+        
+        # Check if there are more functions
+        if self.current_token and self.current_token.lexeme == "function":
+            self.function_definitions()
+    
+    def function(self):
+        """
+        R4. <Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>
+        """
+        self.print_production("<Function> -> function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>")
+        
+        # Match 'function' keyword
+        self.match(TOKEN_KEYWORD, "function")
+        
+        # Match identifier
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            self.match(TOKEN_IDENTIFIER)
+        else:
+            self.error("Expected identifier after 'function'")
+        
+        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "(":
+            self.match(TOKEN_SEPARATOR, "(")
+        else:
+            self.error("Expected '(' after function identifier")
+        
+        # Parse optional parameter list
+        self.opt_parameter_list()
+        
+        # Match closing parenthesis
+        if self.current_token and self.current_token.lexeme == ")":
+            self.match(TOKEN_SEPARATOR, ")")
+        else:
+            self.error("Expected ')' after parameter list")
+        
+        # Parse optional declaration list
+        self.opt_declaration_list()
+        
+        # Parse function body
+        self.body()
+    
+    def opt_parameter_list(self):
+        """
+        R5. <Opt Parameter List> ::= <Parameter List> | <Empty>
+        """
+        self.print_production("<Opt Parameter List> -> <Parameter List> | <Empty>")
+        
+        # Check if there's a parameter (by checking for an identifier)
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            self.parameter_list()
+        # else: Empty production, do nothing
+    
+    def parameter_list(self):
+        """
+        R6. <Parameter List> ::= <Parameter> | <Parameter> , <Parameter List>
+        """
+        self.print_production("<Parameter List> -> <Parameter> | <Parameter> , <Parameter List>")
+        
+        # Parse a parameter
+        self.parameter()
+        
+        # Check if there are more parameters
+        if self.current_token and self.current_token.lexeme == ",":
+            self.match(TOKEN_SEPARATOR, ",")
+            self.parameter_list()
+    
+    def parameter(self):
+        """
+        R7. <Parameter> ::= <IDs> <Qualifier>
+        """
+        self.print_production("<Parameter> -> <IDs> <Qualifier>")
+        
+        # Parse IDs
+        self.ids()
+        
+        # Parse qualifier
+        self.qualifier()
+    
+    def qualifier(self):
+        """
+        R8. <Qualifier> ::= integer | boolean | real
+        """
+        self.print_production("<Qualifier> -> integer | boolean | real")
+        
+        # Match one of the type qualifiers
+        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
+            self.match(TOKEN_KEYWORD)
+        else:
+            self.error("Expected type qualifier (integer, boolean, or real)")
+    
+    def body(self):
+        """
+        R9. <Body> ::= { <Statement List> }
+        """
+        self.print_production("<Body> -> { <Statement List> }")
+        
+        # Match opening brace
+        if self.current_token and self.current_token.lexeme == "{":
+            self.match(TOKEN_SEPARATOR, "{")
+        else:
+            self.error("Expected '{' at the beginning of function body")
+        
+        # Parse statement list
+        self.statement_list()
+        
+        # Match closing brace
+        if self.current_token and self.current_token.lexeme == "}":
+            self.match(TOKEN_SEPARATOR, "}")
+        else:
+            self.error("Expected '}' at the end of function body")
+    
+    def opt_declaration_list(self):
+        """
+        R10. <Opt Declaration List> ::= <Declaration List> | <Empty>
+        """
+        self.print_production("<Opt Declaration List> -> <Declaration List> | <Empty>")
+        
+        # Check if there's a declaration (by checking for a qualifier)
+        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
+            self.declaration_list()
+        # else: Empty production, do nothing
         
     
