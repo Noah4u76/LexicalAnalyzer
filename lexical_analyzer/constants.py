@@ -3,7 +3,7 @@ TOKEN_IDENTIFIER = "IDENTIFIER"
 TOKEN_INTEGER = "INTEGER"
 TOKEN_REAL = "REAL"
 TOKEN_OPERATOR = "OPERATOR"
-TOKEN_SEPERATOR = "SEPARATOR"
+TOKEN_SEPARATOR = "SEPARATOR"
 
 KEYWORDS = [
     "while",
@@ -37,7 +37,7 @@ OPERATORS = [
     ">=",
 ]
 
-SEPERATORS = [
+SEPARATORS = [
     "(",
     ")",
     "{",
@@ -47,4 +47,5 @@ SEPERATORS = [
     ",",
     ";",
     ":",
+    "."
 ]
