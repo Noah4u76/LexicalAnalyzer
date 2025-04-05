@@ -274,8 +274,108 @@ class Parser:
         if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
             self.declaration_list()
         # else: Empty production, do nothing
-        
-    
+    def declaration_list(self):
+        """
+        R11. <Declaration List> ::= <Declaration> | <Declaration> <Declaration List>
+        """
+        self.print_production("<Declaration List> -> <Declaration> | <Declaration> <Declaration List>")
+        self.declaration()
+        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
+            self.declaration_list()
+    def declaration(self):
+        """
+        R12. <Declaration ::= <Qualifier> <IDs>
+        """
+        self.print_production("<Declaration> -> <Qualifier> <IDs>")
+        self.qualifier()
+        self.ids()
+    def ids(self):
+        """
+        R13. <IDs> ::= <Identifier> | <Identifier>, <IDs>
+        """
+        self.print_production("<IDs> -> <Identifier> | <Identifier>, <IDs>")
+        self.match(TOKEN_IDENTIFIER)
+        if self.current_token and self.current_token.lexeme == ",":
+            self.match(TOKEN_SEPARATOR, ",")
+            self.ids()
+    def statement_list(self):
+        """
+        R14. <Statement List> ::= <Statement> | <Statement> <Statement List>
+        """
+        self.print_production("<Statement List> -> <Statement> <Statement List>")
+        self.statement()
+        if self.current_token and self.current_token.lexeme in ["identifier", "if", "while", "{"]:
+            self.statement_list()
+    def statement(self):
+        """
+        R15. <Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+        """
+        self.print_production("<Statment> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>")
+        if self.current_token.lexeme == "{":
+            self.compound()
+        elif self.current_token.lexeme == "=":
+            self.assign()
+        elif self.current_token.lexeme == "if":
+            self.if_statement()
+        elif self.current_token.lexeme == "return":
+            self.return_statement()
+        elif self.current_token.lexeme == "print":
+            self.print_statement()
+        elif self.current_token.lexeme == "scan":
+            self.scan_statement()
+        elif self.current_token.lexeme == "while":
+            self.while_statement()
+        else:
+            self.error("Invalid Statements")
+    def compound(self): 
+        """
+        R16. <Compound> ::= { <Statement List> }
+        """
+        self.print_production("<Compound> -> { <Statement List> }")
+        self.match(TOKEN_SEPARATOR, "{")
+        self.statement_list()
+        self.match(TOKEN_SEPARATOR, "}")
+    def assign(self):
+        """
+        R17. <Assign> ::= <Identifier> = <Expression>
+        """
+        self.print_production(" <Assign> -> <Identifier> = <Expression>")
+        self.match(TOKEN_IDENTIFIER)
+        self.match(TOKEN_OPERATOR, "=")
+        self.expression()
+    def expression(self):
+        """
+        R18. <Expression> ::= <Term> | <Term> + <Expression> | <Term> - <Expression>
+        """
+        self.print_production("<Expression> -> <Term> | <Term> + <Expression> | <Term> - <Expression>")
+        self.term()
+        if self.current_token.lexeme in ["+", "-"]:
+            self.match(TOKEN_OPERATOR)
+            self.expression()
+    def term(self):
+        """
+        R19. <Term> ::= <Factor> | <Factor> * <Term> | <Factor> / <Term>
+        """
+        self.print_production("<Term> -> <Factor> | <Factor> * <Term> | <Factor> / <Term>")
+        self.factor()
+        if self.current_token.lexeme in ["*", "/"]:
+            self.match(TOKEN_OPERATOR)
+            self.term()
+    def factor(self):
+        """
+        R20. <Factor> -> ( <Expression> ) | <Identifier> | <Integer>
+        """
+        self.print_production("<Factor> -> ( <Expression> ) | <Identifier> | <Integer>")
+        if self.current_token.lexeme == "(":
+            self.match(TOKEN_SEPARATOR, "(")
+            self.expression()
+            self.match(TOKEN_SEPARATOR, ")")
+        elif self.current_token.token_typer == TOKEN_IDENTIFIER:
+            self.match(TOKEN_IDENTIFIER)
+        elif self.current_token.token_type == TOKEN_INTEGER:
+            self.match(TOKEN_INTEGER)
+        else: 
+            self.error("Expected factor")
 
     def scan_statement(self):
         """
