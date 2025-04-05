@@ -276,3 +276,192 @@ class Parser:
         # else: Empty production, do nothing
         
     
+
+    def scan_statement(self):
+        """
+        R21. <Scan Statement> ::= scan ( <IDs> )
+        """
+        self.print_production("<Scan Statement> -> scan ( <IDs> )")
+        
+        # Match 'scan'
+        self.match(TOKEN_KEYWORD, "scan")
+        
+        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "(":
+            self.match(TOKEN_SEPARATOR, "(")
+        else:
+            self.error("Expected '(' after 'scan'")
+        
+        # Parse IDs
+        self.ids()
+        
+        # Match closing parenthesis
+        if self.current_token and self.current_token.lexeme == ")":
+            self.match(TOKEN_SEPARATOR, ")")
+        else:
+            self.error("Expected ')' after IDs in scan statement")
+
+        # Match semicolon
+        if self.current_token and self.current_token.lexeme == ";":
+            self.match(TOKEN_SEPARATOR, ";")
+        else:
+            self.error("Expected ';' after scan statement")
+
+    def while_statement(self):
+        """
+        R22. <While Statement> ::= while ( <Expression> ) <Statement>
+        """
+        self.print_production("<While Statement> -> while ( <Expression> ) <Statement>")
+        
+        # Match 'while'
+        self.match(TOKEN_KEYWORD, "while")
+        
+        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "(":
+            self.match(TOKEN_SEPARATOR, "(")
+        else:
+            self.error("Expected '(' after 'while'")
+        
+        # Parse expression
+        self.expression()
+        
+        # Match closing parenthesis
+        if self.current_token and self.current_token.lexeme == ")":
+            self.match(TOKEN_SEPARATOR, ")")
+        else:
+            self.error("Expected ')' after expression in while statement")
+        
+        # Parse statement
+        self.statement()
+
+        # Match "endwhile"
+        if self.current_token and self.current_token.lexeme == "endwhile":
+            self.match(TOKEN_KEYWORD, "endwhile")
+        else:
+            self.error("Expected 'endwhile' after while statement")
+
+    def condition(self):
+        """
+        R23. <Condition> ::= <Expression> <Relop> <Expression>
+        """
+        self.print_production("<Condition> -> <Expression> <Relop> <Expression>")
+        
+        # Parse first expression
+        self.expression()
+        
+        # Parse relational operator
+        self.relop()
+        
+        # Parse second expression
+        self.expression()
+
+    def relop(self):
+        """
+        R24. <Relop> ::= == | != | > | < | <= | >=
+        """
+        self.print_production("<Relop> -> == | != | > | < | <= | >=")
+        
+        # Match one of the relational operators
+        if self.current_token and self.current_token.lexeme in [ "==", "!=", ">", "<", "<=", ">="]:
+            self.match(TOKEN_OPERATOR)
+        else:
+            self.error("Expected relational operator (==, !=, >, <, <=, >=)")
+
+    def expression(self):
+        """
+        R25. <Expression> ::= + <Term> <Expression> | - <Term> <Expression> | <Empty>
+        """
+        self.print_production("<Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>")
+        
+        # Parse term
+        self.term()
+        
+        # Check if there's an addition operator
+        if self.current_token and self.current_token.lexeme == "+":
+            self.match(TOKEN_OPERATOR, "+")
+            self.term()
+            self.expression()
+        # Check if there's a subtraction operator
+        elif self.current_token and self.current_token.lexeme == "-":
+            self.match(TOKEN_OPERATOR, "-")
+            self.term()
+            self.expression()
+        # else: Empty production, do nothing
+
+    def term(self):
+        """
+        R26. <Term> ::= <Factor> | <Factor> <Mulop> <Term>
+        """
+        self.print_production("<Term> -> <Factor> | <Factor> <Mulop> <Term>")
+        
+        # Parse factor
+        self.factor()
+        
+        # Check if there's a multiplication/ division operator
+        if self.current_token and self.current_token.lexeme in ["*", "/"]:
+            self.match(TOKEN_OPERATOR, "-")
+            self.factor()
+            self.term()
+        # else: Empty production, do nothing
+
+    def factor(self):
+        """
+        R27. <Factor> ::= <Primary> | <Primary>
+        """
+        self.print_production("<Factor> -> <Primary> | <Primary>")
+        
+        # Parse primary
+        self.primary()
+        
+        if self.current_token and self.current_token.lexeme == TOKEN_OPERATOR and self.current_token.lexeme == "-":
+            self.match()
+            self.primary()
+        else:
+            self.error("Expected '-' after primary")
+    
+    def primary(self):
+        """
+        R28. <Primary> ::= <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+        """
+        self.print_production("<Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false")
+        
+        # Empty production check
+        if self.current_token is None:
+            self.error("Unexpected end of input")
+
+        # Check for IDs
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            self.match(TOKEN_IDENTIFIER)
+
+            # Check for function call
+            if self.current_token and self.current_token.lexeme == "(" and self.current_token.lexeme == TOKEN_SEPARATOR:
+                self.match(TOKEN_SEPARATOR, "(")
+                self.ids()
+                self.match(TOKEN_SEPARATOR, ")")
+        
+        # Check for integers
+        elif self.current_token and self.current_token.token_type == TOKEN_INTEGER:
+            self.match(TOKEN_INTEGER)
+        
+        # Check for reals
+        elif self.current_token and self.current_token.token_type == TOKEN_REAL:
+            self.match(TOKEN_REAL)
+        
+        # Check for opening parenthesis
+        elif self.current_token and self.current_token.lexeme == "(":
+            self.match(TOKEN_SEPARATOR, "(")
+            self.expression()
+            
+            # Match closing parenthesis
+            if self.current_token and self.current_token.lexeme == ")":
+                self.match(TOKEN_SEPARATOR, ")")
+            else:
+                self.error("Expected ')' after expression")
+
+        # Check for boolean literals
+        elif self.current_token and self.current_token.lexeme in ["true", "false"]:
+            self.match(TOKEN_KEYWORD)
+
+        # Syntax error if none of the above
+        else:
+            self.error("Expected identifier, integer, real, or boolean literal")
