@@ -565,3 +565,12 @@ class Parser:
         # Syntax error if none of the above
         else:
             self.error("Expected identifier, integer, real, or boolean literal")
+
+    def empty(self):
+            """
+            R29. <Empty> ::= <ɛ>
+            """
+            self.print_production("<Empty> -> <ɛ>")
+            
+            # Empty production, do nothing
+            pass    # Avoids syntax error for empty productions
