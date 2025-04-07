@@ -1,0 +1,15 @@
+Token: SEPARATOR, Lexeme: $$
+Token: SEPARATOR, Lexeme: $$
+Token: KEYWORD, Lexeme: integer
+Token: IDENTIFIER, Lexeme: x
+Token: SEPARATOR, Lexeme: ;
+Token: KEYWORD, Lexeme: real
+Token: IDENTIFIER, Lexeme: y
+Token: SEPARATOR, Lexeme: ;
+Token: SEPARATOR, Lexeme: $$
+Token: IDENTIFIER, Lexeme: x
+Token: OPERATOR, Lexeme: =
+Token: INTEGER, Lexeme: 10
+Token: SEPARATOR, Lexeme: ;
+Token: SEPARATOR, Lexeme: $$
+Parsing completed successfully!

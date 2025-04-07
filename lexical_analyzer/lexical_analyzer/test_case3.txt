@@ -1,0 +1,11 @@
+[* Test case with various tokens *]
+integer count = 0;
+real average = 0.0;
+while (count < 10)
+{
+    get(value);
+    average = average + value;
+    count = count + 1;
+}
+average = average / 10.0;
+put(average);

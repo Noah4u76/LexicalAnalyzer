@@ -1,0 +1,8 @@
+Token: SEPARATOR, Lexeme: $$
+Token: SEPARATOR, Lexeme: $$
+Token: SEPARATOR, Lexeme: $$
+Token: KEYWORD, Lexeme: while
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: x
+Error: Expected ')' after expression in while statement at line 4, column 12
+Unexpected token: Token(OPERATOR             <)
