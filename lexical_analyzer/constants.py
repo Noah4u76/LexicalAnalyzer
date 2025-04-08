@@ -20,7 +20,8 @@ KEYWORDS = [
     "false",
     "print",
     "read",
-    "main"
+    "main",
+    "scan"
 ]
 
 OPERATORS = [
@@ -47,5 +48,6 @@ SEPARATORS = [
     ",",
     ";",
     ":",
-    "."
+    ".",
+    "$$"
 ]
