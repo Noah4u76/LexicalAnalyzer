@@ -1,7 +1,7 @@
-from token import Token
-from finite_state_machines import FiniteStateMachines
-from constants import TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_INTEGER, TOKEN_REAL, TOKEN_OPERATOR, TOKEN_SEPARATOR
-from constants import KEYWORDS, OPERATORS, SEPARATORS
+from .token import Token
+from .finite_state_machines import FiniteStateMachines
+from .constants import TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_INTEGER, TOKEN_REAL, TOKEN_OPERATOR, TOKEN_SEPARATOR
+from .constants import KEYWORDS, OPERATORS, SEPARATORS
 
 class Lexer:
     def __init__(self,text):
@@ -41,8 +41,15 @@ class Lexer:
     
         if self.current_char is None:
             return None
-
-    # Handle numbers properly (including real numbers with decimals)
+            
+        # Handle $$
+        if self.current_char == '$' and self.pos + 1 < len(self.text) and self.text[self.pos + 1] == '$':
+            result = '$$'
+            self.advance()
+            self.advance()
+            return Token(TOKEN_SEPARATOR, result)
+    
+        # Handle numbers properly (including real numbers with decimals)
         if self.current_char.isdigit():
             result = ''
             while self.current_char is not None and self.current_char.isdigit():
