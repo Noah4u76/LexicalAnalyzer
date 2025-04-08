@@ -1,4 +1,4 @@
-from lexical_analyzer import Lexer
+from .lexical_analyzer import Lexer
 
 class FileHandler: 
     def __init__(self, input_file, output_file):
