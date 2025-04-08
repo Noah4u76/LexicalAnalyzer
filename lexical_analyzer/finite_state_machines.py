@@ -1,6 +1,6 @@
-from token import Token
-from constants import TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_INTEGER, TOKEN_REAL, TOKEN_OPERATOR, TOKEN_SEPARATOR
-from constants import KEYWORDS, OPERATORS, SEPARATORS
+from .token import Token
+from .constants import TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_INTEGER, TOKEN_REAL, TOKEN_OPERATOR, TOKEN_SEPARATOR
+from .constants import KEYWORDS, OPERATORS, SEPARATORS
 
 class FiniteStateMachines:
     def __init__(self, lexer):
@@ -67,7 +67,7 @@ class FiniteStateMachines:
     
     def real(self):
         """
-        Regular Expression: [0-9]+\.[0-9]+
+        Regular Expression: [0-9]+\\.[0-9]+
         """
         if not (self.lexer.current_char is not None and self.lexer.current_char.isdigit()):
             return None
