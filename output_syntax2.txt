@@ -1,0 +1,38 @@
+Token: SEPARATOR, Lexeme: $$
+	Production: <Opt Function Definitions> -> <Function Definitions> | <Empty>
+Token: SEPARATOR, Lexeme: $$
+Token: KEYWORD, Lexeme: integer
+	Production: <Qualifier> -> integer | boolean | real
+Token: IDENTIFIER, Lexeme: a
+	Production: <IDs> -> <Identifier> | <Identifier>, <IDs>
+Token: SEPARATOR, Lexeme: ;
+	Production: <Declaration> -> <Qualifier> <IDs>
+	Production: <Declaration List> -> <Declaration> | <Declaration> <Declaration List>
+	Production: <Opt Declaration List> -> <Declaration List> | <Empty>
+Token: SEPARATOR, Lexeme: $$
+Token: IDENTIFIER, Lexeme: a
+Token: OPERATOR, Lexeme: =
+Token: INTEGER, Lexeme: 5
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Assign> -> <Identifier> = <Expression>
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: a
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: $$
+	Production: <Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
+Parsing completed successfully!

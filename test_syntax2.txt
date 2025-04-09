@@ -1,0 +1,8 @@
+[* Testing Basic Expressions and Assignments *]
+$$
+$$
+    integer a;
+$$
+    a = 5;
+    print(a);
+$$

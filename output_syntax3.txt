@@ -1,0 +1,221 @@
+Token: SEPARATOR, Lexeme: $$
+	Production: <Opt Function Definitions> -> <Function Definitions> | <Empty>
+Token: SEPARATOR, Lexeme: $$
+Token: KEYWORD, Lexeme: integer
+	Production: <Qualifier> -> integer | boolean | real
+Token: IDENTIFIER, Lexeme: value
+Token: SEPARATOR, Lexeme: ,
+Token: IDENTIFIER, Lexeme: counter
+	Production: <IDs> -> <Identifier> | <Identifier>, <IDs>
+	Production: <IDs> -> <Identifier> | <Identifier>, <IDs>
+Token: SEPARATOR, Lexeme: ;
+	Production: <Declaration> -> <Qualifier> <IDs>
+	Production: <Declaration List> -> <Declaration> | <Declaration> <Declaration List>
+	Production: <Opt Declaration List> -> <Declaration List> | <Empty>
+Token: SEPARATOR, Lexeme: $$
+Token: KEYWORD, Lexeme: scan
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <IDs> -> <Identifier> | <Identifier>, <IDs>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production: <Scan Statement> -> scan ( <IDs> )
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: if
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: OPERATOR, Lexeme: >
+	Production: <Relop> -> == | != | > | < | <= | >=
+Token: INTEGER, Lexeme: 0
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+	Production: <Condition> -> <Expression> <Relop> <Expression>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: else
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: INTEGER, Lexeme: 0
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: endif
+	Production: <If> -> if ( <Condition> ) <Statement> endif | if ( <Condition> ) <Statement> else <Statement> endif
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: if
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: OPERATOR, Lexeme: >
+	Production: <Relop> -> == | != | > | < | <= | >=
+Token: INTEGER, Lexeme: 10
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+	Production: <Condition> -> <Expression> <Relop> <Expression>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: if
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: OPERATOR, Lexeme: <
+	Production: <Relop> -> == | != | > | < | <= | >=
+Token: INTEGER, Lexeme: 20
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+	Production: <Condition> -> <Expression> <Relop> <Expression>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: value
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: else
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: INTEGER, Lexeme: 20
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: endif
+	Production: <If> -> if ( <Condition> ) <Statement> endif | if ( <Condition> ) <Statement> else <Statement> endif
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: endif
+	Production: <If> -> if ( <Condition> ) <Statement> endif | if ( <Condition> ) <Statement> else <Statement> endif
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: IDENTIFIER, Lexeme: counter
+Token: OPERATOR, Lexeme: =
+Token: INTEGER, Lexeme: 1
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Assign> -> <Identifier> = <Expression>
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: while
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: counter
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: OPERATOR, Lexeme: <=
+	Production: <Relop> -> == | != | > | < | <= | >=
+Token: INTEGER, Lexeme: 5
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+	Production: <Condition> -> <Expression> <Relop> <Expression>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: {
+Token: KEYWORD, Lexeme: print
+Token: SEPARATOR, Lexeme: (
+Token: IDENTIFIER, Lexeme: counter
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: )
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Print> -> print ( <Expression>)
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: IDENTIFIER, Lexeme: counter
+Token: OPERATOR, Lexeme: =
+Token: IDENTIFIER, Lexeme: counter
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+Token: OPERATOR, Lexeme: +
+Token: INTEGER, Lexeme: 1
+	Production: <Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+	Production: <Factor> -> <Primary> | <Primary>
+	Production: <Term> -> <Factor> | <Factor> <Mulop> <Term>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+	Production: <Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>
+Token: SEPARATOR, Lexeme: ;
+	Production:  <Assign> -> <Identifier> = <Expression>
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: }
+	Production: <Compound> -> { <Statement List> }
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+Token: KEYWORD, Lexeme: endwhile
+	Production: <While Statement> -> while ( <Expression> ) <Statement>
+	Production: <Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+	Production: <Statement List> -> <Statement> <Statement List>
+Token: SEPARATOR, Lexeme: $$
+	Production: <Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
+Parsing completed successfully!

@@ -343,7 +343,7 @@ class Parser:
             self.scan_statement()
         elif self.current_token.lexeme == "while":
             self.while_statement()
-        elif self.current_token.lexeme = "$$" or self.current_token.lexeme == "}":
+        elif self.current_token.lexeme == "$$" or self.current_token.lexeme == "}":
             self.empty()
         elif self.current_token.token_type == TOKEN_IDENTIFIER:
             self.assign()
@@ -632,7 +632,7 @@ class Parser:
                 if self.current_token and self.current_token.lexeme ==")":
                     self.match(TOKEN_SEPARATOR, ")")
                 else:
-                    self.error("Expected ')' after function arguments
+                    self.error("Expected ')' after function arguments")
         
         # Check for integers
         elif self.current_token and self.current_token.token_type == TOKEN_INTEGER:

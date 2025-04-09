@@ -1,0 +1,36 @@
+[* Testing if-else and while statements *]
+$$
+$$
+    integer value, counter;
+$$
+    [* Conditional execution with if-else *]
+    scan(value);
+    
+    if (value > 0) {
+        print(value);
+    }
+    else {
+        print(0);
+    }
+    endif
+    
+    [* Nested if statements *]
+    if (value > 10) {
+        if (value < 20) {
+            print(value);
+        }
+        else {
+            print(20);
+        }
+        endif
+    }
+    endif
+    
+    [* While loop *]
+    counter = 1;
+    while (counter <= 5) {
+        print(counter);
+        counter = counter + 1;
+    }
+    endwhile
+$$
