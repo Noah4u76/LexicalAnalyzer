@@ -27,12 +27,11 @@ class SymbolTable:
         """
         Prints the symbol table.
         """
-        print("Symbol Table:")
-        print("-" * 20)
-        print("Lexeme\tType\tAddress")
-        print("-" * 20)
+        print("\nSymbol Table")
+        print("Identifier\tMemoryLocation\tType")
+        print("-" * 40)
         for lexeme, info in self.table.items():
-            print(f"{lexeme}: {info['type']} at address {info['address']}")
+            print(f"{lexeme}\t\t{info['address']}\t\t{info['type']}")
 
     def get_address(self, lexeme):
         """

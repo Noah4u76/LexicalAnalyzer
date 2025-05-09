@@ -1,6 +1,8 @@
 from lexical_analyzer.lexical_analyzer import Lexer
 from lexical_analyzer.file_handler import FileHandler
 from syntax_analyzer.parser import Parser
+from code_generator.symbol_table import SymbolTable
+from code_generator.code_generator import AssemblyGenerator
 
 def create_test_files():
     
@@ -90,11 +92,20 @@ def run_syntax_analysis(input_file, output_file):
     # Create a lexer for the input
     lexer = Lexer(input_text)
     
+    # Create symbol table and assembly generator
+    symbol_table = SymbolTable()
+    assembly_gen = AssemblyGenerator(symbol_table)
+    
     # Create a parser and parse the input
-    parser = Parser(lexer, output_file)
+    parser = Parser(lexer, output_file, symbol_table, assembly_gen)
     
     print(f"Parsing {input_file}...")
     parser.parse()
+    
+    # Print symbol table and assembly code
+    symbol_table.print_table()
+    assembly_gen.print_assembly()
+    
     print(f"Results written to {output_file}")
     
 def run_tests():
