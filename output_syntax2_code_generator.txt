@@ -1,0 +1,28 @@
+Assembly Code Listing
+====================================
+1 PUSHI     5
+2 POPM      10000
+3 PUSHI     10
+4 POPM      10001
+5 PUSHI     1
+6 POPM      10002
+7 PUSHM     10000
+8 PUSHM     10001
+9 LES
+10 JMP0 14
+11 PUSHM     10000
+12 SOUT
+13 JMP 16
+14 PUSHM     10001
+15 SOUT
+16 PUSHI     0
+17 POPM      10002
+18 PUSHM     10002
+19 SOUT
+
+Symbol Table
+Identifier	MemoryLocation	Type
+----------------------------------------
+a		10000		integer
+b		10001		integer
+flag		10002		boolean

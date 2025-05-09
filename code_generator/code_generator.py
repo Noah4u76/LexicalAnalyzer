@@ -24,7 +24,7 @@ class AssemblyGenerator:
         """
         Returns the next instruction index.
         """
-        return self.current_instruction + 1
+        return self.current_instruction
     
     def print_assembly(self):
         """
@@ -33,7 +33,7 @@ class AssemblyGenerator:
         print("Generated Assembly Code:")
         print("=======================================")
         for i in range(1, self.current_instruction):
-            print(f"{i}: {self.instructions[i]}")
+            print(f"{i} {self.instructions[i]}")
 
     #=========================
     # ASSEMBLY INSTRUCTIONS
@@ -57,13 +57,13 @@ class AssemblyGenerator:
         """
         return self.generate_instruction(f"POPM      {address}")
     
-    def gen_sout(self):
+    def gen_stdout(self):
         """
         I4. Generates a standard out instruction.
         """
         return self.generate_instruction("SOUT")
     
-    def gen_sin(self):
+    def gen_stdin(self):
         """
         I5. Generates a standard in instruction.
         """
@@ -129,26 +129,158 @@ class AssemblyGenerator:
         """
         return self.generate_instruction("LEQ")
     
-    def gen_jump0(self, address = None):
+    def gen_jump_false(self, address=None):
         """
         I16. Generates a jump if zero instruction.
+        JMP0 {IL} - Pop the stack and if the value is 0 then jmp to {IL}
         """
         if address is None:
-            jmp0_addr = self.gen_instruction("JMP0      0")
-            return jmp0_addr
+            # If no address is provided, use a placeholder that will be backpatched later
+            jmp_addr = self.generate_instruction("JMP0 0")
+            return jmp_addr
         else:
-            raise Exception("Semantic Error: Address should not be provided for JMP0 instruction.")
+            return self.generate_instruction(f"JMP0 {address}")
     
-    def gen_jump(self, address):
+    def gen_jump(self, address=None):
         """
         I17. Generates a JMP instruction.
+        JMP {IL} - Unconditionally jmp to {IL}
         """
-        return self.generate_instruction(f"JMP      {address}")
+        if address is None:
+            # If no address is provided, use a placeholder that will be backpatched later
+            jmp_addr = self.generate_instruction("JMP 0")
+            return jmp_addr
+        else:
+            return self.generate_instruction(f"JMP {address}")
     
-    def gen_label(self, label):
+    def gen_label(self):
         """
         I18. Generates a label instruction.
+        LABEL - Empty Instruction; Provides the instruction location to jmp to.
         """
-        return self.generate_instruction(f"L{label}:")
+        label_addr = self.generate_instruction("LABEL")
+        return label_addr
     
+    # Additional methods for code generation patterns
+
+    def backpatch(self, jump_addr, target_addr):
+        """
+        Backpatches a jump instruction with the target address.
+        """
+        instruction = self.instructions[jump_addr]
+        if instruction.startswith("JMP0"):
+            self.instructions[jump_addr] = f"JMP0 {target_addr}"
+        elif instruction.startswith("JMP"):
+            self.instructions[jump_addr] = f"JMP {target_addr}"
     
+    def gen_assignment(self, identifier):
+        """
+        Generates code for an assignment statement.
+        The value to be assigned should already be on the stack.
+        """
+        address = self.symbol_table.get_address(identifier)
+        return self.gen_popm(address)
+    
+    def gen_arithmetic(self, operator):
+        """
+        Generates code for an arithmetic operation.
+        The operands should already be on the stack.
+        """
+        if operator == '+':
+            return self.gen_add()
+        elif operator == '-':
+            return self.gen_sub()
+        elif operator == '*':
+            return self.gen_mul()
+        elif operator == '/':
+            return self.gen_div()
+    
+    def gen_relational(self, operator):
+        """
+        Generates code for a relational operation.
+        The operands should already be on the stack.
+        """
+        if operator == '>':
+            return self.gen_greater()
+        elif operator == '<':
+            return self.gen_less()
+        elif operator == '==':
+            return self.gen_equal()
+        elif operator == '!=':
+            return self.gen_not_equal()
+        elif operator == '>=':
+            return self.gen_greater_equal()
+        elif operator == '<=':
+            return self.gen_less_equal()
+    
+    def gen_print(self):
+        """
+        Generates code for a print statement.
+        The value to be printed should already be on the stack.
+        """
+        return self.gen_stdout()
+    
+    def gen_scan(self, identifier):
+        """
+        Generates code for a scan statement.
+        """
+        address = self.symbol_table.get_address(identifier)
+        self.gen_stdin()
+        return self.gen_popm(address)
+    
+    def start_while_loop(self):
+        """
+        Generates code for the start of a while loop.
+        Returns the label address for the condition.
+        """
+        # Generate a label for the start of the loop
+        self.generate_instruction("LABEL")
+        return self.current_instruction - 1
+    
+    def while_condition(self):
+        """
+        Generates code for the while condition evaluation.
+        The result of the condition should already be on the stack.
+        Returns the jump address to be backpatched.
+        """
+        jmp_addr = self.gen_jump_false(0)
+        return jmp_addr
+    
+    def end_while_loop(self, loop_start, condition_jmp):
+        """
+        Generates code for the end of a while loop.
+        """
+        # Jump back to the start of the loop
+        self.gen_jump(loop_start)
+        
+        # Backpatch the condition jump to the current instruction
+        self.backpatch(condition_jmp, self.current_instruction)
+    
+    def start_if_statement(self):
+        """
+        Generates code for the start of an if statement.
+        The result of the condition should already be on the stack.
+        Returns the jump address to be backpatched.
+        """
+        return self.gen_jump_false(0)
+    
+    def else_statement(self, if_jmp_addr):
+        """
+        Generates code for the else part of an if-else statement.
+        Returns the jump address to be backpatched.
+        """
+        # First, add an unconditional jump to skip the else part
+        else_jmp_addr = self.gen_jump(0)
+        
+        # Backpatch the if jump to the current instruction
+        self.backpatch(if_jmp_addr, self.current_instruction)
+        
+        return else_jmp_addr
+    
+    def end_if_statement(self, jmp_addr):
+        """
+        Generates code for the end of an if statement.
+        """
+        # Backpatch the jump address
+        self.backpatch(jmp_addr, self.current_instruction)
+            

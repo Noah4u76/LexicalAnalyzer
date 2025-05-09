@@ -9,11 +9,13 @@ class Parser:
     """
     Initializes the parser with a lexer and an optional output file.
     """
-    def __init__(self, lexer, output_file=None, debug=None):
+    def __init__(self, lexer, output_file=None, symbol_table=None, assembly_gen=None, debug=None):
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
         self.output_file = None
         self.debug = True
+        self.symbol_table = symbol_table
+        self.assembly_gen = assembly_gen
         
         if output_file:
             self.output_file = open(output_file, 'w')
@@ -43,7 +45,7 @@ class Parser:
         output_str = (f"\tProduction: {production}")
         
         if self.output_file:
-            self.output.write(f"{output_str}\n")
+            self.output_file.write(f"{output_str}\n")
                 
         print(output_str)
             
@@ -53,10 +55,10 @@ class Parser:
         """
         
         if self.current_token:
-            output_str = f"Token: {self.current_token.type}, Lexeme: {self.current_token.lexeme}"
+            output_str = f"Token: {self.current_token.token_type}, Lexeme: {self.current_token.lexeme}"
             
-            if self.output:
-                self.output.write(f"{output_str}\n")
+            if self.output_file:
+                self.output_file.write(f"{output_str}\n")
             
             print(output_str)
     
@@ -68,15 +70,18 @@ class Parser:
         if self.current_token is None:
             self.error("Unexpected end of input")
             
-        self.print_token()
+        if self.debug:
+            self.print_token()
         
-        if token_type and self.current_token.type != token_type:
-            self.error(f"Expected token type {token_type}, but got {self.current_token.type}")
+        if token_type and self.current_token.token_type != token_type:
+            self.error(f"Expected token type {token_type}, but got {self.current_token.token_type}")
             
         if lexeme and self.current_token.lexeme != lexeme:
             self.error(f"Expected lexeme {lexeme}, but got {self.current_token.lexeme}")
             
+        current_token = self.current_token
         self.current_token = self.lexer.get_next_token()
+        return current_token
         
     def parse(self):
         """
@@ -88,7 +93,7 @@ class Parser:
             print("Parsing completed successfully!")
             if self.output_file:
                 self.output_file.write("Parsing completed successfully!\n")
-        except SyntaxError as e:
+        except Exception as e:
             print(f"Parsing failed: {e}")
             if self.output_file:
                 self.output_file.write(f"Parsing failed: {e}\n")
@@ -96,6 +101,8 @@ class Parser:
     def rat25s(self):
         """
         R1. <Rat25S> ::= $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
+        For simplified Rat25S, we'll ignore function definitions.
+        Modified to: <Rat25S> ::= $$ $$ <Opt Declaration List> $$ <Statement List> $$
         """
         # Match the first $$
         if self.current_token and self.current_token.lexeme == "$$":
@@ -103,14 +110,12 @@ class Parser:
         else:
             self.error("Expected '$$' at the beginning of the program")
         
-        # Parse optional function definitions
-        self.opt_function_definitions()
-        
-        # Match the second $$
+        # For simplified Rat25S, we skip function definitions
+        # Just match the second $$
         if self.current_token and self.current_token.lexeme == "$$":
             self.match(lexeme="$$")
         else:
-            self.error("Expected '$$' after function definitions")
+            self.error("Expected '$$' after beginning of program")
         
         # Parse optional declarations
         self.opt_declaration_list()
@@ -130,144 +135,13 @@ class Parser:
         else:
             self.error("Expected '$$' at the end of the program")
 
-        self.print_production("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
-        
-    def opt_function_definitions(self):
-        """
-        R2. <Opt Function Definitions> ::= <Function Definitions> | <Empty>
-        """
-        # Check if we have a function definition
-        if self.current_token and self.current_token.lexeme == "function":
-            self.function_definitions()
-        # else: Empty production, do nothing
-        
-        self.print_production("<Opt Function Definitions> -> <Function Definitions> | <Empty>")
-        
-    def function_definitions(self):
-        """
-        R3. <Function Definitions> ::= <Function> | <Function> <Function Definitions>
-        """
-        # Parse a function
-        self.function()
-        
-        # Check if there are more functions
-        if self.current_token and self.current_token.lexeme == "function":
-            self.function_definitions()
-
-        self.print_production("<Function Definitions> -> <Function> | <Function> <Function Definitions>")
-        
-    def function(self):
-        """
-        R4. <Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>
-        """
-        # Match 'function' keyword
-        self.match(TOKEN_KEYWORD, "function")
-        
-        # Match identifier
-        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
-            self.match(TOKEN_IDENTIFIER)
-        else:
-            self.error("Expected identifier after 'function'")
-        
-        # Match opening parenthesis
-        if self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
-        else:
-            self.error("Expected '(' after function identifier")
-        
-        # Parse optional parameter list
-        self.opt_parameter_list()
-        
-        # Match closing parenthesis
-        if self.current_token and self.current_token.lexeme == ")":
-            self.match(TOKEN_SEPARATOR, ")")
-        else:
-            self.error("Expected ')' after parameter list")
-        
-        # Parse optional declaration list
-        self.opt_declaration_list()
-        
-        # Parse function body
-        self.body()
-
-        self.print_production("<Function> -> function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>")
-        
-    def opt_parameter_list(self):
-        """
-        R5. <Opt Parameter List> ::= <Parameter List> | <Empty>
-        """
-        # Check if there's a parameter (by checking for an identifier)
-        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
-            self.parameter_list()
-        # else: Empty production, do nothing
-
-        self.print_production("<Opt Parameter List> -> <Parameter List> | <Empty>")
-        
-    def parameter_list(self):
-        """
-        R6. <Parameter List> ::= <Parameter> | <Parameter> , <Parameter List>
-        """
-        # Parse a parameter
-        self.parameter()
-        
-        # Check if there are more parameters
-        if self.current_token and self.current_token.lexeme == ",":
-            self.match(TOKEN_SEPARATOR, ",")
-            self.parameter_list()
-
-        self.print_production("<Parameter List> -> <Parameter> | <Parameter> , <Parameter List>")
-        
-    def parameter(self):
-        """
-        R7. <Parameter> ::= <IDs> <Qualifier>
-        """
-        # Parse IDs
-        self.ids()
-        
-        # Parse qualifier
-        self.qualifier()
-        
-        self.print_production("<Parameter> -> <IDs> <Qualifier>")
-        
-    def qualifier(self):
-        """
-        R8. <Qualifier> ::= integer | boolean | real
-        """
-        # Match one of the type qualifiers
-        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
-            self.match(TOKEN_KEYWORD)
-        else:
-            self.error("Expected type qualifier (integer, boolean, or real)")
-        
-        self.print_production("<Qualifier> -> integer | boolean | real")
-        
-    def body(self):
-        """
-        R9. <Body> ::= { <Statement List> }
-        """
-        # Match opening brace
-        if self.current_token and self.current_token.lexeme == "{":
-            self.match(TOKEN_SEPARATOR, "{")
-        else:
-            self.error("Expected '{' at the beginning of function body")
-        
-        # Parse statement list
-        self.statement_list()
-        
-        # Match closing brace
-        if self.current_token and self.current_token.lexeme == "}":
-            self.match(TOKEN_SEPARATOR, "}")
-        else:
-            self.error("Expected '}' at the end of function body")
-        
-        self.print_production("<Body> -> { <Statement List> }")
+        self.print_production("<Rat25S> -> $$ $$ <Opt Declaration List> $$ <Statement List> $$")
         
     def opt_declaration_list(self):
         """
-        R10. <Opt Declaration List> ::= <Declaration List> | <Empty>
+        R5. <Opt Declaration List> ::= <Declaration List> | <Empty>
         """
-        # Check if there's a declaration (by checking for a qualifier)
-        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
+        if self.current_token and self.current_token.lexeme in ["integer", "boolean"]:
             self.declaration_list()
         # else: Empty production, do nothing
         
@@ -275,397 +149,585 @@ class Parser:
         
     def declaration_list(self):
         """
-        R11. <Declaration List> ::= <Declaration> | <Declaration> <Declaration List>
+        R6. <Declaration List> ::= <Declaration> ; | <Declaration> ; <Declaration List>
         """
         self.declaration()
-        if self.current_token and self.current_token.lexeme in ["integer", "boolean", "real"]:
-            self.declaration_list()
-
-        self.print_production("<Declaration List> -> <Declaration> | <Declaration> <Declaration List>")
         
-    def declaration(self):
-        """
-        R12. <Declaration ::= <Qualifier> <IDs>
-        """
-        self.qualifier()
-        self.ids()
-
-        # Match semicolon after IDs
         if self.current_token and self.current_token.lexeme == ";":
-            self.match(TOKEN_SEPARATOR, ";")
+            self.match(lexeme=";")
         else:
             self.error("Expected ';' after declaration")
         
+        if self.current_token and self.current_token.lexeme in ["integer", "boolean"]:
+            self.declaration_list()
+            
+        self.print_production("<Declaration List> -> <Declaration> ; | <Declaration> ; <Declaration List>")
+        
+    def declaration(self):
+        """
+        R7. <Declaration> ::= <Qualifier> <IDs>
+        Modified for simplified Rat25S: Only allow integer and boolean, no real
+        """
+        # Get the type from qualifier
+        type_name = self.qualifier()
+        
+        # Parse IDs and add them to symbol table
+        self.ids(type_name)
+        
         self.print_production("<Declaration> -> <Qualifier> <IDs>")
-    
-    def ids(self):
+        
+    def qualifier(self):
         """
-        R13. <IDs> ::= <Identifier> | <Identifier>, <IDs>
+        R8. <Qualifier> ::= integer | boolean
+        Modified for simplified Rat25S: No real type
         """
-        self.match(TOKEN_IDENTIFIER)
+        if self.current_token and self.current_token.lexeme == "integer":
+            self.match(lexeme="integer")
+            qualifier_type = "integer"
+        elif self.current_token and self.current_token.lexeme == "boolean":
+            self.match(lexeme="boolean")
+            qualifier_type = "boolean"
+        else:
+            self.error("Expected 'integer' or 'boolean'")
+        
+        self.print_production("<Qualifier> -> integer | boolean")
+        return qualifier_type
+        
+    def ids(self, type_name):
+        """
+        R10. <IDs> ::= <Identifier> | <Identifier>, <IDs>
+        Now also adds identifiers to the symbol table.
+        """
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            # Get the identifier lexeme
+            id_token = self.match(TOKEN_IDENTIFIER)
+            
+            # Add to symbol table
+            if self.symbol_table:
+                try:
+                    self.symbol_table.insert(id_token.lexeme, type_name)
+                except Exception as e:
+                    self.error(str(e))
+        else:
+            self.error("Expected identifier")
+        
         if self.current_token and self.current_token.lexeme == ",":
-            self.match(TOKEN_SEPARATOR, ",")
-            self.ids()
-        
+            self.match(lexeme=",")
+            self.ids(type_name)
+            
         self.print_production("<IDs> -> <Identifier> | <Identifier>, <IDs>")
-        
+    
     def statement_list(self):
         """
-        R14. <Statement List> ::= <Statement> | <Statement> <Statement List>
+        R11. <Statement List> ::= <Statement> | <Statement> <Statement List>
         """
-        # Check if end of statement list
-        if not self.current_token and self.current_token.lexeme == "$$" or self.current_token.lexeme == "}":
-            return
-                
         self.statement()
-        # Parse for more statements if available
-        if self.current_token and self.current_token.lexeme in ["identifier", "if", "while", "{"]:
-            self.statement_list()
-
-        self.print_production("<Statement List> -> <Statement> <Statement List>")
         
+        if self.current_token and self.current_token.lexeme != "$$" and self.current_token.lexeme != "}":
+            self.statement_list()
+        
+        self.print_production("<Statement List> -> <Statement> | <Statement> <Statement List>")
+    
     def statement(self):
         """
-        R15. <Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
+        R12. <Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>
         """
         if not self.current_token:
-            return
+            self.error("Unexpected end of input in statement")
             
         if self.current_token.lexeme == "{":
             self.compound()
+        elif self.current_token.token_type == TOKEN_IDENTIFIER:
+            self.assign()
         elif self.current_token.lexeme == "if":
             self.if_statement()
-        elif self.current_token.lexeme == "return":
-            self.return_statement()
         elif self.current_token.lexeme == "print":
             self.print_statement()
         elif self.current_token.lexeme == "scan":
             self.scan_statement()
         elif self.current_token.lexeme == "while":
             self.while_statement()
-        elif self.current_token.lexeme == "$$" or self.current_token.lexeme == "}":
-            self.empty()
-        elif self.current_token.token_type == TOKEN_IDENTIFIER:
-            self.assign()
         else:
-            self.error("Invalid Statement, unexpected token: {self.current_token.lexeme}")
-
-        self.print_production("<Statment> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>")
-        
-    def compound(self): 
+            self.error(f"Invalid statement starting with '{self.current_token.lexeme}'")
+            
+        self.print_production("<Statement> -> <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>")
+    
+    def compound(self):
         """
-        R16. <Compound> ::= { <Statement List> }
+        R13. <Compound> ::= { <Statement List> }
         """
-        self.match(TOKEN_SEPARATOR, "{")
-        self.statement_list()
-
-        # Check for closing brace
+        if self.current_token and self.current_token.lexeme == "{":
+            self.match(lexeme="{")
+        else:
+            self.error("Expected '{' to start compound statement")
+            
+        if self.current_token and self.current_token.lexeme != "}":
+            self.statement_list()
+            
         if self.current_token and self.current_token.lexeme == "}":
-            self.match(TOKEN_SEPARATOR, "}")
+            self.match(lexeme="}")
         else:
-            self.error("Expected '}}' at the end of compound statement")
+            self.error("Expected '}' to end compound statement")
             
         self.print_production("<Compound> -> { <Statement List> }")
-        
+    
     def assign(self):
         """
-        R17. <Assign> ::= <Identifier> = <Expression>
+        R14. <Assign> ::= <Identifier> = <Expression> ;
+        Now also generates assembly code for the assignment.
         """
-        self.match(TOKEN_IDENTIFIER)
-        self.match(TOKEN_OPERATOR, "=")
-        self.expression()
-
-        # Match semicolon
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            # Get the identifier
+            id_token = self.match(TOKEN_IDENTIFIER)
+            identifier = id_token.lexeme
+            
+            # Check if identifier is in symbol table
+            if self.symbol_table:
+                try:
+                    identifier_type = self.symbol_table.get_type(identifier)
+                except Exception as e:
+                    self.error(str(e))
+        else:
+            self.error("Expected identifier for assignment")
+            
+        if self.current_token and self.current_token.lexeme == "=":
+            self.match(lexeme="=")
+        else:
+            self.error("Expected '=' in assignment")
+            
+        # Parse the expression, which will put the result on the stack
+        expr_type = self.expression()
+        
+        # Type checking for assignment
+        if self.symbol_table and not self.symbol_table.check_type_compatibility(identifier_type, expr_type):
+            self.error(f"Type mismatch in assignment: Cannot assign {expr_type} to {identifier_type}")
+        
+        # Generate assembly code for the assignment
+        if self.assembly_gen:
+            self.assembly_gen.gen_assignment(identifier)
+            
         if self.current_token and self.current_token.lexeme == ";":
-            self.match(TOKEN_SEPARATOR, ";")
+            self.match(lexeme=";")
         else:
             self.error("Expected ';' after assignment")
-        
-        self.print_production(" <Assign> -> <Identifier> = <Expression>")
-        
+            
+        self.print_production("<Assign> -> <Identifier> = <Expression> ;")
+    
     def if_statement(self):
         """
-        R18. <If> ::= if ( <Condition> ) <Statement> endif | if ( <Condition> ) <Statement> else <Statement> endif
+        R15. <If> ::= if ( <Condition> ) <Statement> endif | 
+                   if ( <Condition> ) <Statement> else <Statement> endif
+        Now also generates assembly code for the if statement.
         """
-          
-        # Match 'if'
-        self.match(TOKEN_KEYWORD, "if")
-        
-        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "if":
+            self.match(lexeme="if")
+        else:
+            self.error("Expected 'if'")
+            
         if self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
+            self.match(lexeme="(")
         else:
             self.error("Expected '(' after 'if'")
             
-        # Parse condition
+        # Parse the condition, which will put the result on the stack
         self.condition()
         
-        # Match closing parenthesis
+        # Generate assembly code for the if statement
+        if_jmp_addr = None
+        if self.assembly_gen:
+            if_jmp_addr = self.assembly_gen.start_if_statement()
+            
         if self.current_token and self.current_token.lexeme == ")":
-            self.match(TOKEN_SEPARATOR, ")")
+            self.match(lexeme=")")
         else:
             self.error("Expected ')' after condition")
-        
-        # Parse statement
+            
+        # Parse the statement
         self.statement()
         
-        # Check for 'else'
+        # Check if there's an else part
+        else_jmp_addr = if_jmp_addr
         if self.current_token and self.current_token.lexeme == "else":
-            self.match(TOKEN_KEYWORD, "else")
+            self.match(lexeme="else")
+            
+            # Generate assembly code for the else part
+            if self.assembly_gen:
+                else_jmp_addr = self.assembly_gen.else_statement(if_jmp_addr)
+                
+            # Parse the else statement
             self.statement()
         
-        # Match 'endif'
+        # Match the endif
         if self.current_token and self.current_token.lexeme == "endif":
-            self.match(TOKEN_KEYWORD, "endif")
+            self.match(lexeme="endif")
         else:
-            self.error("Expected 'endif' at end of if statement")
+            self.error("Expected 'endif'")
+            
+        # Generate assembly code for the end of the if statement
+        if self.assembly_gen:
+            self.assembly_gen.end_if_statement(else_jmp_addr)
             
         self.print_production("<If> -> if ( <Condition> ) <Statement> endif | if ( <Condition> ) <Statement> else <Statement> endif")
-        
-    def return_statement(self):
-        """
-        R19. <Return> ::= return ; | return <Expression>
-        """
-        # Match 'return'
-        self.match(TOKEN_KEYWORD, "return")
-        
-        # Parse expression
-        self.expression()
-        
-        # Match semicolon
-        if self.current_token and self.current_token.lexeme == ";":
-            self.match(TOKEN_SEPARATOR, ";")
-        else:
-            self.error("Expected ';' after return expression")
-                
-        self.print_production("<Return> -> return ; | return <Expression>")
-            
+
     def print_statement(self):
         """
-        R20. <Print> ::= print ( <Expression>)
+        R17. <Print> ::= print ( <Expression> ) ;
+        Now also generates assembly code for the print statement.
         """
-        # Match 'print'
-        self.match(TOKEN_KEYWORD, "print")
-        
-        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "print":
+            self.match(lexeme="print")
+        else:
+            self.error("Expected 'print'")
+            
         if self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
+            self.match(lexeme="(")
         else:
             self.error("Expected '(' after 'print'")
             
-        # Parse expression
+        # Parse the expression, which will put the result on the stack
         self.expression()
         
-        # Match closing parenthesis
         if self.current_token and self.current_token.lexeme == ")":
-            self.match(TOKEN_SEPARATOR, ")")
+            self.match(lexeme=")")
         else:
             self.error("Expected ')' after expression")
             
-        # Match semicolon
-        if self.current_token and self.current_token.lexeme == ";":
-            self.match(TOKEN_SEPARATOR, ";")
-        else:
-            self.error("Expected ';' after print expression")
+        # Generate assembly code for the print statement
+        if self.assembly_gen:
+            self.assembly_gen.gen_stdout()
             
-        self.print_production(" <Print> -> print ( <Expression>)")
-
+        if self.current_token and self.current_token.lexeme == ";":
+            self.match(lexeme=";")
+        else:
+            self.error("Expected ';' after print statement")
+            
+        self.print_production("<Print> -> print ( <Expression> ) ;")
+    
     def scan_statement(self):
         """
-        R21. <Scan Statement> ::= scan ( <IDs> )
+        R18. <Scan> ::= scan ( <IDs> ) ;
+        Now also generates assembly code for the scan statement.
         """
-        # Match 'scan'
-        self.match(TOKEN_KEYWORD, "scan")
-        
-        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "scan":
+            self.match(lexeme="scan")
+        else:
+            self.error("Expected 'scan'")
+            
         if self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
+            self.match(lexeme="(")
         else:
             self.error("Expected '(' after 'scan'")
-        
-        # Parse IDs
-        self.ids()
-        
-        # Match closing parenthesis
+            
+        # Parse the IDs and generate scan instructions for each one
+        self.scan_ids()
+            
         if self.current_token and self.current_token.lexeme == ")":
-            self.match(TOKEN_SEPARATOR, ")")
+            self.match(lexeme=")")
         else:
-            self.error("Expected ')' after IDs in scan statement")
-
-        # Match semicolon
+            self.error("Expected ')' after IDs")
+            
         if self.current_token and self.current_token.lexeme == ";":
-            self.match(TOKEN_SEPARATOR, ";")
+            self.match(lexeme=";")
         else:
             self.error("Expected ';' after scan statement")
+            
+        self.print_production("<Scan> -> scan ( <IDs> ) ;")
+    
+    def scan_ids(self):
+        """
+        Helper method for scan statement to handle multiple IDs.
+        Similar to <IDs> rule but generates scan instructions for each ID.
+        """
+        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
+            # Get the identifier
+            id_token = self.match(TOKEN_IDENTIFIER)
+            identifier = id_token.lexeme
+            
+            # Check if identifier is in symbol table
+            if self.symbol_table:
+                try:
+                    self.symbol_table.get_type(identifier)  # This will raise an error if not found
+                    
+                    # Generate assembly code for the scan
+                    if self.assembly_gen:
+                        self.assembly_gen.gen_scan(identifier)
+                except Exception as e:
+                    self.error(str(e))
+        else:
+            self.error("Expected identifier for scan")
         
-        self.print_production("<Scan Statement> -> scan ( <IDs> )")
-        
+        if self.current_token and self.current_token.lexeme == ",":
+            self.match(lexeme=",")
+            self.scan_ids()
+    
     def while_statement(self):
         """
-        R22. <While Statement> ::= while ( <Expression> ) <Statement>
+        R19. <While> ::= while ( <Condition> ) <Statement> endwhile
+        Now also generates assembly code for the while loop.
         """
-        # Match 'while'
-        self.match(TOKEN_KEYWORD, "while")
-        
-        # Match opening parenthesis
+        if self.current_token and self.current_token.lexeme == "while":
+            self.match(lexeme="while")
+        else:
+            self.error("Expected 'while'")
+            
+        # Generate label for the start of the while loop
+        loop_start = None
+        if self.assembly_gen:
+            loop_start = self.assembly_gen.start_while_loop()
+            
         if self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
+            self.match(lexeme="(")
         else:
             self.error("Expected '(' after 'while'")
-        
-        # Parse condition
+            
+        # Parse the condition, which will put the result on the stack
         self.condition()
         
-        # Match closing parenthesis
+        # Generate conditional jump for the while condition
+        condition_jmp = None
+        if self.assembly_gen:
+            condition_jmp = self.assembly_gen.while_condition()
+            
         if self.current_token and self.current_token.lexeme == ")":
-            self.match(TOKEN_SEPARATOR, ")")
+            self.match(lexeme=")")
         else:
-            self.error("Expected ')' after expression in while statement")
-        
-        # Parse statement
+            self.error("Expected ')' after condition")
+            
+        # Parse the statement
         self.statement()
-
-        # Match "endwhile"
-        if self.current_token and self.current_token.lexeme == "endwhile":
-            self.match(TOKEN_KEYWORD, "endwhile")
-        else:
-            self.error("Expected 'endwhile' after while statement")
-
-        self.print_production("<While Statement> -> while ( <Expression> ) <Statement>")
         
+        # Generate code to jump back to the condition
+        if self.assembly_gen:
+            self.assembly_gen.end_while_loop(loop_start, condition_jmp)
+            
+        if self.current_token and self.current_token.lexeme == "endwhile":
+            self.match(lexeme="endwhile")
+        else:
+            self.error("Expected 'endwhile'")
+            
+        self.print_production("<While> -> while ( <Condition> ) <Statement> endwhile")
+    
     def condition(self):
         """
-        R23. <Condition> ::= <Expression> <Relop> <Expression>
+        R20. <Condition> ::= <Expression> <Relop> <Expression>
+        Now also generates assembly code for the condition.
         """
-        # Parse first expression
-        self.expression()
+        # Parse the first expression
+        expr1_type = self.expression()
         
-        # Parse relational operator
-        self.relop()
+        # Get the relational operator
+        relop = self.relop()
         
-        # Parse second expression
-        self.expression()
-
+        # Parse the second expression
+        expr2_type = self.expression()
+        
+        # Type checking for the condition
+        if self.symbol_table and not self.symbol_table.check_type_compatibility(expr1_type, expr2_type):
+            self.error(f"Type mismatch in condition: Cannot compare {expr1_type} with {expr2_type}")
+        
+        # Generate assembly code for the condition
+        if self.assembly_gen:
+            self.assembly_gen.gen_relational(relop)
+            
         self.print_production("<Condition> -> <Expression> <Relop> <Expression>")
-        
+    
     def relop(self):
         """
-        R24. <Relop> ::= == | != | > | < | <= | >=
+        R21. <Relop> ::= == | != | > | < | <= | >=
+        Now returns the relational operator for code generation.
         """
-        # Match one of the relational operators
-        if self.current_token and self.current_token.lexeme in [ "==", "!=", ">", "<", "<=", ">="]:
-            self.match(TOKEN_OPERATOR)
-        else:
-            self.error("Expected relational operator (==, !=, >, <, <=, >=)")
-
-        self.print_production("<Relop> -> == | != | > | < | <= | >=")
+        relop = None
         
+        if self.current_token and self.current_token.lexeme == "==":
+            self.match(lexeme="==")
+            relop = "=="
+        elif self.current_token and self.current_token.lexeme == "!=":
+            self.match(lexeme="!=")
+            relop = "!="
+        elif self.current_token and self.current_token.lexeme == ">":
+            self.match(lexeme=">")
+            relop = ">"
+        elif self.current_token and self.current_token.lexeme == "<":
+            self.match(lexeme="<")
+            relop = "<"
+        elif self.current_token and self.current_token.lexeme == "<=":
+            self.match(lexeme="<=")
+            relop = "<="
+        elif self.current_token and self.current_token.lexeme == ">=":
+            self.match(lexeme=">=")
+            relop = ">="
+        else:
+            self.error("Expected relational operator")
+            
+        self.print_production("<Relop> -> == | != | > | < | <= | >=")
+        return relop
+    
     def expression(self):
         """
-        R25. <Expression> ::= + <Term> <Expression> | - <Term> <Expression> | <Empty>
+        R22. <Expression> ::= <Term> | <Term> + <Expression> | <Term> - <Expression>
+        Now also generates assembly code for the expression and returns the type.
         """
-        # Parse term
-        self.term()
+        # Parse the first term
+        term_type = self.term()
         
-        # Check if there's an addition operator
-        if self.current_token and self.current_token.lexeme == "+":
-            self.match(TOKEN_OPERATOR, "+")
-            self.expression()
-        # Check if there's a subtraction operator
-        elif self.current_token and self.current_token.lexeme == "-":
-            self.match(TOKEN_OPERATOR, "-")
-            self.expression()
-        # else: Empty production, do nothing
-        
-        self.print_production("<Expression> -> + <Term> <Expression> | - <Term> <Expression> | <Empty>")
-
+        # Check if there's an operator
+        if self.current_token and self.current_token.lexeme in ["+", "-"]:
+            operator = self.current_token.lexeme
+            self.match(lexeme=operator)
+            
+            # Parse the rest of the expression
+            expr_type = self.expression()
+            
+            # Type checking for the expression
+            if self.symbol_table:
+                # Check if both operands are same type and not boolean for arithmetic operations
+                if not self.symbol_table.check_type_compatibility(term_type, expr_type, operator):
+                    self.error(f"Type mismatch in expression: Cannot perform {operator} on {term_type} and {expr_type}")
+            
+            # Generate assembly code for the expression
+            if self.assembly_gen:
+                self.assembly_gen.gen_arithmetic(operator)
+                
+            return term_type  # Return the type of the expression
+            
+        return term_type  # Return the type of the term if no operator
+    
     def term(self):
         """
-        R26. <Term> ::= <Factor> | <Factor> <Mulop> <Term>
+        R23. <Term> ::= <Factor> | <Factor> * <Term> | <Factor> / <Term>
+        Now also generates assembly code for the term and returns the type.
         """
-        # Parse factor
-        self.factor()
+        # Parse the first factor
+        factor_type = self.factor()
         
-        # Check if there's a multiplication/ division operator
-        if self.current_token and self.current_token.lexeme == "*":
-            self.match(TOKEN_OPERATOR, "*")
-            self.term()
-        elif self.current_token and self.current_token.lexeme == "/":
-            self.match(TOKEN_OPERATOR, "/")
-            self.term()
-        # else: Empty production, do nothing
+        # Check if there's an operator
+        if self.current_token and self.current_token.lexeme in ["*", "/"]:
+            operator = self.current_token.lexeme
+            self.match(lexeme=operator)
+            
+            # Parse the rest of the term
+            term_type = self.term()
+            
+            # Type checking for the term
+            if self.symbol_table:
+                # Check if both operands are same type and not boolean for arithmetic operations
+                if not self.symbol_table.check_type_compatibility(factor_type, term_type, operator):
+                    self.error(f"Type mismatch in term: Cannot perform {operator} on {factor_type} and {term_type}")
+            
+            # Generate assembly code for the term
+            if self.assembly_gen:
+                self.assembly_gen.gen_arithmetic(operator)
+                
+            return factor_type  # Return the type of the term
+            
+        return factor_type  # Return the type of the factor if no operator
     
-        self.print_production("<Term> -> <Factor> | <Factor> <Mulop> <Term>")
-        
     def factor(self):
         """
-        R27. <Factor> ::= <Primary> | <Primary>
+        R24. <Factor> ::= - <Primary> | <Primary>
+        Now also generates assembly code for the factor and returns the type.
         """
-        # Parse primary
-        self.primary()
-        
+        # Check if there's a unary minus
         if self.current_token and self.current_token.lexeme == "-":
-            self.match(TOKEN_OPERATOR, "-")
-            self.primary()
-        else:
-            self.primary()
-        
-        self.print_production("<Factor> -> <Primary> | <Primary>")
+            self.match(lexeme="-")
+            
+            # Parse the primary
+            primary_type = self.primary()
+            
+            # Type checking for the unary minus
+            if self.symbol_table and primary_type == "boolean":
+                self.error("Cannot apply unary minus to boolean value")
+            
+            # Generate assembly code for the unary minus (negate by multiplying by -1)
+            if self.assembly_gen:
+                self.assembly_gen.gen_pushi(-1)
+                self.assembly_gen.gen_mul()
+                
+            return primary_type
+            
+        # Parse the primary
+        return self.primary()
     
     def primary(self):
         """
-        R28. <Primary> ::= <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false
+        R25. <Primary> ::= <Identifier> | <Integer> | <Identifier> ( <IDs> ) | ( <Expression> ) | <Real> | true | false
+        Modified for simplified Rat25S: No function calls
+        Now also generates assembly code for the primary and returns the type.
         """
-        # Empty production check
-        if self.current_token is None:
-            self.error("Unexpected end of input")
-
-        # Check for IDs
-        if self.current_token and self.current_token.token_type == TOKEN_IDENTIFIER:
-            self.match(TOKEN_IDENTIFIER)
-
-            # Check for function call
-            if self.current_token and self.current_token.lexeme == "(":
-                self.match(TOKEN_SEPARATOR, "(")
-                self.ids()
-
-                if self.current_token and self.current_token.lexeme ==")":
-                    self.match(TOKEN_SEPARATOR, ")")
-                else:
-                    self.error("Expected ')' after function arguments")
-        
-        # Check for integers
-        elif self.current_token and self.current_token.token_type == TOKEN_INTEGER:
+        if not self.current_token:
+            self.error("Unexpected end of input in primary")
+            
+        # Identifier
+        if self.current_token.token_type == TOKEN_IDENTIFIER:
+            # Get the identifier
+            id_token = self.match(TOKEN_IDENTIFIER)
+            identifier = id_token.lexeme
+            
+            # Check if identifier is in symbol table
+            if self.symbol_table:
+                try:
+                    identifier_type = self.symbol_table.get_type(identifier)
+                    
+                    # Generate assembly code for the identifier
+                    if self.assembly_gen:
+                        address = self.symbol_table.get_address(identifier)
+                        self.assembly_gen.gen_pushm(address)
+                        
+                    return identifier_type
+                except Exception as e:
+                    self.error(str(e))
+            
+            return "unknown"  # Default type if no symbol table
+            
+        # Integer
+        elif self.current_token.token_type == TOKEN_INTEGER:
+            value = self.current_token.lexeme
             self.match(TOKEN_INTEGER)
-        
-        # Check for reals
-        elif self.current_token and self.current_token.token_type == TOKEN_REAL:
-            self.match(TOKEN_REAL)
-        
-        # Check for parenthesized expressions
-        elif self.current_token and self.current_token.lexeme == "(":
-            self.match(TOKEN_SEPARATOR, "(")
-            self.expression()
+            
+            # Generate assembly code for the integer
+            if self.assembly_gen:
+                self.assembly_gen.gen_pushi(value)
+                
+            return "integer"
+            
+        # Expression in parentheses
+        elif self.current_token.lexeme == "(":
+            self.match(lexeme="(")
+            expr_type = self.expression()
             
             if self.current_token and self.current_token.lexeme == ")":
-                self.match(TOKEN_SEPARATOR, ")")
+                self.match(lexeme=")")
             else:
                 self.error("Expected ')' after expression")
-
-        # Check for boolean literals
-        elif self.current_token and self.current_token.lexeme in ["true", "false"]:
-            self.match(TOKEN_KEYWORD)
-
-        # Syntax error if none of the above
+                
+            return expr_type
+            
+        # Boolean literals
+        elif self.current_token.lexeme == "true":
+            self.match(lexeme="true")
+            
+            # Generate assembly code for true (1)
+            if self.assembly_gen:
+                self.assembly_gen.gen_pushi(1)
+                
+            return "boolean"
+            
+        elif self.current_token.lexeme == "false":
+            self.match(lexeme="false")
+            
+            # Generate assembly code for false (0)
+            if self.assembly_gen:
+                self.assembly_gen.gen_pushi(0)
+                
+            return "boolean"
+            
         else:
-            self.error("Expected identifier, integer, real, or boolean literal")
-
-        self.print_production("<Primary> -> <Identifier> | <Integer> | <Identifier> ( <IDs>) | ( <Expression> ) | <Real> | true | false")
-
-    # R29 is here for requirements, but not really used
+            self.error(f"Invalid primary: {self.current_token.lexeme}")
+            
+        self.print_production("<Primary> -> <Identifier> | <Integer> | ( <Expression> ) | true | false")
+    
     def empty(self):
-            """
-            R29. <Empty> ::= <Epsilon>
-            """
-            self.print_production("<Empty> -> <Epsilon>")
-            # Empty production, do nothing
+        """
+        R26. <Empty> ::= ε
+        """
+        self.print_production("<Empty> -> ε")

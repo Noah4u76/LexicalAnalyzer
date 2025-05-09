@@ -6,69 +6,77 @@ from code_generator.code_generator import AssemblyGenerator
 
 def create_test_files():
     
-    test_case1 = """ [* Testing sample Rat25S Program *]
-    $$
-        function convertx (fahr integer)
-        {
-            return 5 * (fahr -32) / 9;
-        }
-    $$
-        integer low, high, step; [* declarations *]
-    $$
-        scan (low, high, step);
-        while (low <= high )
-        {   print (low);
-            print (convertx (low));
-            low = low + step;
-        }
-        endwhile
-    $$
+    # Sample code from assignment 3
+    test_case1 = """[* this is comment for this sample code for assignment 3 *]
+$$
+[* NO function definitions *]
+$$
+integer i, max, sum; [* declarations *]
+$$
+sum = 0;
+i = 1;
+scan (max);
+while (i < max) {
+sum = sum + i;
+i = i + 1;
+} endwhile
+print (sum + max);
+$$
     """    
+    
     test_case2 = """[* Testing Basic Expressions and Assignments *]
-    $$
-    $$
-        integer a;
-    $$
-        a = 5;
-        print(a);
-    $$"""
+$$
+$$
+integer a, b;
+boolean flag;
+$$
+a = 5;
+b = 10;
+flag = true;
+if (a < b) {
+  print(a);
+} else {
+  print(b);
+}
+endif
+flag = false;
+print(flag);
+$$"""
         
     test_case3 = """[* Testing if-else and while statements *]
-    $$
-    $$
-        integer value, counter;
-    $$
-        [* Conditional execution with if-else *]
-        scan(value);
-        
-        if (value > 0) {
-            print(value);
-        }
-        else {
-            print(0);
-        }
-        endif
-        
-        [* Nested if statements *]
-        if (value > 10) {
-            if (value < 20) {
-                print(value);
-            }
-            else {
-                print(20);
-            }
-            endif
-        }
-        endif
-        
-        [* While loop *]
-        counter = 1;
-        while (counter <= 5) {
-            print(counter);
-            counter = counter + 1;
-        }
-        endwhile
-    $$"""
+$$
+$$
+integer value, counter, result;
+boolean done;
+$$
+[* Conditional execution with if-else *]
+scan(value);
+done = false;
+
+if (value > 0) {
+    result = value * 2;
+    print(result);
+}
+else {
+    result = 0;
+    print(result);
+}
+endif
+
+[* While loop *]
+counter = 1;
+while (counter <= value) {
+    print(counter);
+    counter = counter + 1;
+    if (counter == 3) {
+        done = true;
+    }
+    endif
+}
+endwhile
+
+print(done);
+$$"""
 
     with open("test_syntax1.txt", "w") as f:
         f.write(test_case1)
@@ -83,7 +91,7 @@ def create_test_files():
     
 def run_syntax_analysis(input_file, output_file):
     """
-    Run the syntax analyzer on the input file and output the results
+    Run the syntax analyzer and code generator on the input file and output the results
     """
     # Read the input file
     with open(input_file, 'r') as f:
@@ -106,13 +114,41 @@ def run_syntax_analysis(input_file, output_file):
     symbol_table.print_table()
     assembly_gen.print_assembly()
     
+    # Write to the output file for syntax analysis
+    with open(output_file, 'a') as f:
+        f.write("\nSymbol Table\n")
+        f.write("Identifier\tMemoryLocation\tType\n")
+        f.write("-" * 40 + "\n")
+        for lexeme, info in symbol_table.table.items():
+            f.write(f"{lexeme}\t\t{info['address']}\t\t{info['type']}\n")
+        
+        f.write("\nAssembly Code Listing\n")
+        f.write("====================================\n")
+        for i in range(1, assembly_gen.current_instruction):
+            f.write(f"{i} {assembly_gen.instructions[i]}\n")
+    
+    # Create a separate file for the assembly code output
+    assembly_output_file = output_file.replace('.txt', '_code_generator.txt')
+    with open(assembly_output_file, 'w') as f:
+        f.write("Assembly Code Listing\n")
+        f.write("====================================\n")
+        for i in range(1, assembly_gen.current_instruction):
+            f.write(f"{i} {assembly_gen.instructions[i]}\n")
+        
+        f.write("\nSymbol Table\n")
+        f.write("Identifier\tMemoryLocation\tType\n")
+        f.write("-" * 40 + "\n")
+        for lexeme, info in symbol_table.table.items():
+            f.write(f"{lexeme}\t\t{info['address']}\t\t{info['type']}\n")
+    
     print(f"Results written to {output_file}")
+    print(f"Assembly code written to {assembly_output_file}")
     
 def run_tests():
     """
     Run the syntax analyzer on the test files
     """
-    print("Running syntax analysis on test files...")
+    print("Running syntax analysis and code generation on test files...")
     
     run_syntax_analysis("test_syntax1.txt", "output_syntax1.txt")
     run_syntax_analysis("test_syntax2.txt", "output_syntax2.txt")
@@ -122,10 +158,10 @@ def run_tests():
     
 def main():
     """
-    Main function to run the syntax analyzer
+    Main function to run the syntax analyzer and code generator
     """
-    print("Syntax Analyzer for Rat25S Language")
-    print("----------------------------------")
+    print("Syntax Analyzer and Code Generator for Simplified Rat25S Language")
+    print("------------------------------------------------------------------")
     
     # Create test files
     create_test_files()

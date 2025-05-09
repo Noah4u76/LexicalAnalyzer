@@ -1,0 +1,51 @@
+Assembly Code Listing
+====================================
+1 SIN
+2 POPM      10000
+3 PUSHI     0
+4 POPM      10003
+5 PUSHM     10000
+6 PUSHI     0
+7 GRT
+8 JMP0 16
+9 PUSHM     10000
+10 PUSHI     2
+11 M
+12 POPM      10002
+13 PUSHM     10002
+14 SOUT
+15 JMP 20
+16 PUSHI     0
+17 POPM      10002
+18 PUSHM     10002
+19 SOUT
+20 PUSHI     1
+21 POPM      10001
+22 LABEL
+23 PUSHM     10001
+24 PUSHM     10000
+25 LEQ
+26 JMP0 40
+27 PUSHM     10001
+28 SOUT
+29 PUSHM     10001
+30 PUSHI     1
+31 A
+32 POPM      10001
+33 PUSHM     10001
+34 PUSHI     3
+35 EQU
+36 JMP0 39
+37 PUSHI     1
+38 POPM      10003
+39 JMP 22
+40 PUSHM     10003
+41 SOUT
+
+Symbol Table
+Identifier	MemoryLocation	Type
+----------------------------------------
+value		10000		integer
+counter		10001		integer
+result		10002		integer
+done		10003		boolean

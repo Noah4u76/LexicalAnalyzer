@@ -1,8 +1,18 @@
 [* Testing Basic Expressions and Assignments *]
 $$
 $$
-    integer a;
+integer a, b;
+boolean flag;
 $$
-    a = 5;
-    print(a);
+a = 5;
+b = 10;
+flag = true;
+if (a < b) {
+  print(a);
+} else {
+  print(b);
+}
+endif
+flag = false;
+print(flag);
 $$
