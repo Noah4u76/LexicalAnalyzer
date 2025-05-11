@@ -1,4 +1,4 @@
-# Lexical Analyzer and Syntax Analyzer for Rat25S Language
+# Lexical Analyzer, Syntax Analyzer, and Code Generator for Rat25S Language
 
 ## Features
 - **Tokenizes valid Rat25S syntax**
@@ -11,7 +11,9 @@
   - **Integers** (`123`, `0`, etc.)
   - **Real Numbers** (`10.5`, `0.0`, etc.)
 - **Handles syntax errors** by detecting invalid characters
-- **[4/6] Prints** tokens, lexemes, and production rules used in producing that token
+- **Prints** tokens, lexemes, and production rules used in producing that token
+- **Maintains Symbol Table** for variables and functions
+- **Generates Assembly Code** for the Rat25S program
 
 ## Setup
 ### **1. Clone the repository**
@@ -21,7 +23,7 @@
 ```
 
 ### **2. Run the Analyzer**
-To run the syntax analyzer on a test case:
+To run the syntax analyzer and code generator on a test case:
 ```sh
 python main.py
 ```
@@ -33,10 +35,14 @@ Test cases are included in:
 - `test_syntax3.txt`
 
 ### **4. Output Files**
-Tokens are saved in:
-- `output_syntax1.txt`
-- `output_syntax2.txt`
-- `output_syntax3.txt`
+- **Syntax Analysis Output**:
+  - `output_syntax1.txt`
+  - `output_syntax2.txt`
+  - `output_syntax3.txt`
+- **Assembly Code Output**:
+  - `output_syntax1_code_generator.txt`
+  - `output_syntax2_code_generator.txt`
+  - `output_syntax3_code_generator.txt`
 
 ## Example Input
 ### **Input File (`test_syntax1.txt`)**
@@ -58,10 +64,10 @@ $$
   }
   endwhile
 $$
-
 ```
 
-### **Expected Output (`output_syntax1.txt`)**
+### **Expected Output**
+#### **Syntax Analysis (`output_syntax1.txt`)**
 ```sh
 Syntax Analyzer for Rat25S Language
 ----------------------------------
@@ -87,11 +93,49 @@ Debug: Recognized integer '5'
 ...
 ```
 
-## Error Handling
-If an invalid character is encountered, the lexer will **throw an error**:
+#### **Assembly Code (`output_syntax1_code_generator.txt, output_syntax2_code_generator.txt, output_syntax3_code_generator.txt`)**
 ```sh
-SyntaxError: Expected '$$' at the beginning of the program
+Assembly Code Listing
+====================================
+1 PUSHI     0
+2 POPM      10002
+3 PUSHI     1
+4 POPM      10000
+5 SIN
+6 POPM      10001
+7 LABEL
+8 PUSHM     10000
+9 PUSHM     10001
+10 LES
+11 JMP0 21
+12 PUSHM     10002
+13 PUSHM     10000
+14 A
+15 POPM      10002
+16 PUSHM     10000
+17 PUSHI     1
+18 A
+19 POPM      10000
+20 JMP 7
+21 PUSHM     10002
+22 PUSHM     10001
+23 A
+24 SOUT
+
+Symbol Table
+Identifier	MemoryLocation	Type
+----------------------------------------
+i		10000		integer
+max		10001		integer
+sum		10002		integer
+
 ```
+
+## Error Handling
+The system handles various types of errors:
+- **Syntax Errors**: Invalid program structure
+- **Semantic Errors**: Type mismatches, undefined variables
+- **Code Generation Errors**: Invalid operations or memory access
 
 ## Contributors
 - **Noah Sanderson**
